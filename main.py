@@ -255,18 +255,13 @@ if email_or_phone and password and st.sidebar.button("スタート"):
     st.session_state['history_data'] = history_data
     st.session_state['unique_category_names'] = unique_category_names
     st.session_state['graph_placeholder'] = graph_placeholder
-
-# カテゴリ選択用のチェックボックス
-# if 'unique_category_names' in st.session_state:
-#     selected_categories = st.sidebar.multiselect("カテゴリを選択", st.session_state['unique_category_names'], default=st.session_state['unique_category_names'])
+    
 
 if 'unique_category_names' in st.session_state:
-    unique_category_names = st.session_state['unique_category_names']
     
-    # デフォルトの選択を外すためのリストを作成
-    default_selection = unique_category_names
+    default_selection = list(st.session_state['unique_category_names'])
     
-    # 特定のカテゴリがunique_category_namesに存在する場合、そのカテゴリのデフォルト選択を外す
+    # 特定のカテゴリがst.session_state['unique_category_names']に存在する場合、そのカテゴリのデフォルト選択を外す
     if 'ニュースと政治' in default_selection:
         default_selection.remove('ニュースと政治')
     if '科学と技術' in default_selection:
@@ -274,9 +269,7 @@ if 'unique_category_names' in st.session_state:
     if '教育' in default_selection:
         default_selection.remove('教育')
     
-    selected_categories = st.sidebar.multiselect("カテゴリを選択", unique_category_names, default=default_selection)
-
-
+    selected_categories = st.sidebar.multiselect("カテゴリを選択", st.session_state['unique_category_names'], default=default_selection)
 
 
 # グラフを更新するための条件付き呼び出し
