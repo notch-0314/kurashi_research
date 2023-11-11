@@ -7,127 +7,235 @@ from selenium.webdriver.chrome import service as fs
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
+from urllib.parse import urlparse, parse_qs
+from selenium.common.exceptions import StaleElementReferenceException
+from googleapiclient.discovery import build
+from isodate import parse_duration
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
 
+api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
+rcParams['font.family'] = 'Noto Sans JP'
+
+# 今日を起点にして2日前〜6日前の曜日名をリスト形式で取得（Youtubeの日付が「今日」「昨日」「n曜日」...となっているため）
+today = datetime.now()
+weekdays_en = [(today - timedelta(days=i)).strftime('%A') for i in range(2, 7)]
+weekdays_jp_mapping = {
+    'Monday': '月曜日',
+    'Tuesday': '火曜日',
+    'Wednesday': '水曜日',
+    'Thursday': '木曜日',
+    'Friday': '金曜日',
+    'Saturday': '土曜日',
+    'Sunday': '日曜日'
+}
+weekdays_jp = [weekdays_jp_mapping[day] for day in weekdays_en]
+
+# ISO 8601形式の時間を秒数に変換
+def convert_duration_to_sec(iso_duration):
+    duration = parse_duration(iso_duration)
+    total_seconds = int(duration.total_seconds())
+    return total_seconds
+
+# 秒数を「時間」「分」「秒」に変換
+def convert_seconds_to_hrs_min_sec(total_seconds):
+    hours = total_seconds // 3600
+    remainder = total_seconds % 3600
+    minutes = remainder // 60
+    seconds = remainder % 60
+    return hours, minutes, seconds
+
+# URLからidを取得
+def extract_video_id(url):
+    parsed_url = urlparse(url)
+    if 'youtube.com' in parsed_url.netloc:
+        query_params = parse_qs(parsed_url.query)
+        return query_params.get('v', [None])[0]
+    else:
+        return None
+
+# URLから視聴秒数を取得
+def extract_viewing_time(url):
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    t_param = query_params.get('t', [None])[0]
+
+    if t_param and 's' in t_param:
+        return int(t_param.replace('s', ''))
+    else:
+        return t_param
+
+# 動画idから必要な情報を取得
+def get_video_details(video_id):
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    request = youtube.videos().list(
+        part="snippet,contentDetails,statistics",
+        id=video_id
+    )
+    response = request.execute()
+    if response['items']:
+        item = response['items'][0]
+        title = item['snippet']['title']
+        category_id = item['snippet']['categoryId']
+        channel_name = item['snippet']['channelTitle']
+        duration = response['items'][0]['contentDetails']['duration']
+        category_name = get_category_name(category_id)
+        total_sec = convert_duration_to_sec(duration)
+        return title, category_name, channel_name, total_sec
+    else:
+        return None, None, None, None
+
+# カテゴリidからカテゴリ名を取得
+def get_category_name(category_id):
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    request = youtube.videoCategories().list(
+        part="snippet",
+        id=category_id,
+        hl="ja"
+    )
+    response = request.execute()
+    if response['items']:
+        category_name = response['items'][0]['snippet']['title']
+        return category_name
+    else:
+        return None
+
+# 動画URLをスクレイピングし、idを抽出。APIを使用して視聴履歴の必要データを格納
+def fetch_data_for_date(date_label, browser):
+    data = []
+    xpath_query = f"//ytd-item-section-renderer[contains(@class, 'style-scope ytd-section-list-renderer')][descendant::*[contains(text(), '{date_label}')]]"
+    element = browser.find_element(By.XPATH, xpath_query)
+    links = element.find_elements(By.XPATH, ".//a[contains(@class, 'yt-simple-endpoint')]")
+    
+    for link in links:
+        url = link.get_attribute('href')
+        video_id = extract_video_id(url)
+        if video_id:
+            title, category_name, channel_name, total_sec = get_video_details(video_id)
+            viewing_time = extract_viewing_time(url) or total_sec
+            data.append({
+                'title': title,
+                'category_name': category_name,
+                'channel_name': channel_name,
+                'total_sec': total_sec,
+                'viewing_time': viewing_time
+            })
+    return data
+
+# 日付ごとにスクレイピングと情報の格納を実行
+def get_history_data(browser):
+    history_data = {}
+
+    history_data['今日'] = fetch_data_for_date('今日', browser)
+    history_data['昨日'] = fetch_data_for_date('昨日', browser)
+    for weekday in weekdays_jp:
+        history_data[weekday] = fetch_data_for_date(weekday, browser)
+
+    return history_data
+
+# チェックされたカテゴリの動画の視聴時間を合計し、グラフ化
+def update_graph(selected_categories, history_data, graph_placeholder):
+    viewing_times_in_min = []  # 分単位での視聴時間を格納するリスト
+    days = ['今日', '昨日'] + [day for day in weekdays_jp if day in history_data]
+    days.reverse()
+
+    for day in days:
+        day_total_sec = sum(video['viewing_time'] for video in history_data[day] if video['category_name'] in selected_categories)
+        day_total_min = day_total_sec / 60  # 秒数を分に変換
+        viewing_times_in_min.append(day_total_min)
+
+    # グラフを描画
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(days, viewing_times_in_min, color='#1340F2', width=0.3)
+    plt.xlabel('日付')
+    plt.ylabel('視聴時間 (分)')
+    plt.title('選択されたカテゴリにおける過去3日間のYouTube視聴時間')
+    plt.xticks(days)
+
+    # 各棒に「時間:分:秒」形式のラベルを追加
+    for bar in bars:
+        yvalue = bar.get_height()
+        hours, minutes, seconds = convert_seconds_to_hrs_min_sec(int(yvalue * 60))  # yvalueを再び秒に変換
+        plt.text(bar.get_x() + bar.get_width()/2, yvalue, f"{hours}時間{minutes}分{seconds}秒", ha='center', va='bottom')
+
+    graph_placeholder.pyplot(plt)
+
+def wait_for_element_clickable(browser, by, value, timeout=10):
+    return WebDriverWait(browser, timeout).until(EC.element_to_be_clickable((by, value)))
+
+def wait_for_element_visible(browser, by, value, timeout=10):
+    return WebDriverWait(browser, timeout).until(EC.visibility_of_element_located((by, value)))
+
+def find_element_by_text(elements, text):
+    return next((element for element in elements if element.text == text), None)
 
 def start_button_clicked(input_email_or_phone, input_password):
+    
+    graph_placeholder = st.empty() # グラフを表示する場所に空のグラフを配置
+    
     ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
-    # ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 
     options = webdriver.ChromeOptions()
     options.add_argument('--user-agent=' + ua)
     options.add_argument('--disable-blink-features=AutomationControlled')
     
-    # ChromeDriverのパスを取得してServiceオブジェクトを初期化
     chrome_service = ChromeService(executable_path=ChromeDriverManager().install())
     
-    # chrome_service = fs.Service(executable_path='chromedriver-117.exe')
-    # chrome_service = fs.Service(executable_path='path_to_chromedriver_for_version_119.exe')
-
-    # browser = webdriver.Chrome(options=options, service=chrome_service)
-    # browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    # browser = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
-    
-    # Serviceオブジェクトとオプションを使用してブラウザを初期化
     browser = webdriver.Chrome(service=chrome_service, options=options)
-
-
-
     
     browser.get('https://www.youtube.com/feed/history')
+
+    wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
+    wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
+
+    try: # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
+        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
+        next_button.click()
+    except StaleElementReferenceException: # エラーが発生した場合、要素を再取得して操作を試みる
+        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
+        next_button.click()
     
-    # driver = webdriver.Chrome()
-    # driver.get('https://www.youtube.com/')
-
-    elem_login_btn2 = browser.find_elements(By.TAG_NAME, 'ytd-button-renderer')
-
-    i = 0
-    array_i = 0
-    for e in elem_login_btn2:
-        if e.text == "ログイン":
-            array_i = i
-        i +=1   
-    elem_login_btn3 = elem_login_btn2[array_i].click()
-
-    elem_login_btn4 = browser.find_elements(By.TAG_NAME, 'input')
-
-    i = 0
-    array_i = 0
-    for e in elem_login_btn4:
-        if e.get_attribute('aria-label') == "メールアドレスまたは電話番号":
-            array_i = i
-        i +=1
-
-    elem_login_btn5 = elem_login_btn4[array_i]
-    elem_login_btn5.send_keys(input_email_or_phone)
+    # ページの特定の要素が表示されるまで待つ
+    wait_for_element_visible(browser, By.XPATH, "//*[contains(text(), '火曜日')]")
     
-    elem_login_btn6 = browser.find_elements(By.TAG_NAME, 'button')
 
-    i = 0
-    array_i = 0
-    for e in elem_login_btn6:
-        if e.text == "次へ":
-            array_i = i
-        i +=1
-
-    # elem_login_btn6[array_i].click()
+    print('こんにちは')
     
-    # elem_login_btn7 = browser.find_elements(By.TAG_NAME, 'input')
+    try:
+        # 視聴履歴を取得
+        history_data = get_history_data(browser)
+        # 視聴履歴に含まれるカテゴリ一覧をunique_category_namesに格納
+        unique_category_names = set()
+        for day_data in history_data.values():
+            for video in day_data:
+                unique_category_names.add(video['category_name'])
+        
+    except Exception as e:
+        print(f"エラーが発生しました: {e}")
+        
+    return history_data, list(unique_category_names), graph_placeholder
 
-    # i = 0
-    # array_i = 0
-    # for e in elem_login_btn7:
-    #     if e.get_attribute('aria-label') == "パスワードを入力":
-    #         array_i = i
-    #     i +=1
 
-    # elem_login_btn8 = elem_login_btn7[array_i]
-    # elem_login_btn8.send_keys(input_password)
-    
-    # elem_login_btn9 = browser.find_elements(By.TAG_NAME, 'button')
-    
-    elem_login_btn6[array_i].click()
-
-    # "次へ"ボタンをクリックした後、パスワード入力フィールドが表示されるまで待機
-    wait = WebDriverWait(browser, 10)  # 最大で10秒待機
-    elem_login_btn8 = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]')))
-
-    elem_login_btn8.send_keys(input_password)
-
-    elem_login_btn9 = browser.find_elements(By.TAG_NAME, 'button')
-
-    i = 0
-    array_i = 0
-    for e in elem_login_btn9:
-        if e.text == "次へ":
-            array_i = i
-        i +=1
-
-    elem_login_btn9[array_i].click()
-    
-    time.sleep(10)
-    # idが「contents」の要素配下のすべての要素を取得
-    # elements = browser.find_elements_by_css_selector("#contents *")
-
-    elements = browser.find_elements(By.ID, "contents")
-    # 要素のテキストなどを表示
-    for element in elements:
-        print(element.text)
-
-    # ブラウザを閉じる
-    browser.quit()
-    
 
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
 password = st.sidebar.text_input("パスワード", type="password")  # type="password"でテキストを隠す
 
-# 両方のフィールドに入力がある場合にのみ「スタート」ボタンを表示
-if email_or_phone and password:
-    if st.sidebar.button("スタート"):
-        start_button_clicked(email_or_phone, password)
-        st.write("スタートボタンが押されました")
+if email_or_phone and password and st.sidebar.button("スタート"):
+    history_data, unique_category_names, graph_placeholder = start_button_clicked(email_or_phone, password)
+    st.session_state['history_data'] = history_data
+    st.session_state['unique_category_names'] = unique_category_names
+    st.session_state['graph_placeholder'] = graph_placeholder
 
+# カテゴリ選択用のチェックボックス
+if 'unique_category_names' in st.session_state:
+    selected_categories = st.sidebar.multiselect("カテゴリを選択", st.session_state['unique_category_names'], default=st.session_state['unique_category_names'])
 
-        
+# グラフを更新するための条件付き呼び出し
+if 'history_data' in st.session_state and 'unique_category_names' in st.session_state:
+    update_graph(selected_categories, st.session_state['history_data'], st.session_state['graph_placeholder'])
+
         
