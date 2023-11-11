@@ -14,6 +14,7 @@ from isodate import parse_duration
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
+import matplotlib.animation as animation
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
 rcParams['font.family'] = 'Noto Sans JP'
@@ -101,13 +102,18 @@ def get_category_name(category_id):
     else:
         return None
 
-# 動画URLをスクレイピングし、idを抽出。APIを使用して視聴履歴の必要データを格納
+# 動画URLをスクレイピングし、idを抽出。APIを使用して視聴履歴の必要データを格納。視聴データのない曜日は曜日のみ格納
 def fetch_data_for_date(date_label, browser):
     data = []
     xpath_query = f"//ytd-item-section-renderer[contains(@class, 'style-scope ytd-section-list-renderer')][descendant::*[contains(text(), '{date_label}')]]"
-    element = browser.find_element(By.XPATH, xpath_query)
-    links = element.find_elements(By.XPATH, ".//a[contains(@class, 'yt-simple-endpoint')]")
+    elements = browser.find_elements(By.XPATH, xpath_query)
     
+    if not elements: # 要素が見つからなかった場合、空のデータリストを返す
+        return data
+
+    element = elements[0]
+    links = element.find_elements(By.XPATH, ".//a[contains(@class, 'yt-simple-endpoint')]")
+
     for link in links:
         url = link.get_attribute('href')
         video_id = extract_video_id(url)
@@ -123,25 +129,46 @@ def fetch_data_for_date(date_label, browser):
             })
     return data
 
+# YouTubeの言語設定に基づいて日付ラベルを選択
+def get_date_labels(browser):
+    # ページの言語設定を取得
+    language = browser.execute_script("return document.documentElement.lang;")
+    
+    # デバッグ情報を出力
+    print("Detected language:", language)
+    
+    # 言語設定に基づいて日付ラベルを選択
+    if language == 'ja-JP':
+        date_labels = ['今日', '昨日'] + weekdays_jp
+    else:
+        date_labels = ['Today', 'Yesterday'] + weekdays_en
+
+    # 戻り値をコンソールに出力
+    print("Returning date labels:", date_labels)
+
+    return date_labels
+
 # 日付ごとにスクレイピングと情報の格納を実行
 def get_history_data(browser):
     history_data = {}
+    date_labels = get_date_labels(browser)
+    date_labels.reverse() #逆にする
+    st.session_state['date_labels'] = date_labels  # Streamlitのセッション状態に保存
 
-    history_data['今日'] = fetch_data_for_date('今日', browser)
-    history_data['昨日'] = fetch_data_for_date('昨日', browser)
-    for weekday in weekdays_jp:
-        history_data[weekday] = fetch_data_for_date(weekday, browser)
+    for date_label in date_labels:
+        history_data[date_label] = fetch_data_for_date(date_label, browser)
 
     return history_data
 
 # チェックされたカテゴリの動画の視聴時間を合計し、グラフ化
 def update_graph(selected_categories, history_data, graph_placeholder):
     viewing_times_in_min = []  # 分単位での視聴時間を格納するリスト
-    days = ['今日', '昨日'] + [day for day in weekdays_jp if day in history_data]
-    days.reverse()
+    days = st.session_state['date_labels']  # セッション状態から日付ラベルを取得
+    # days.reverse()
 
     for day in days:
-        day_total_sec = sum(video['viewing_time'] for video in history_data[day] if video['category_name'] in selected_categories)
+        videos = history_data.get(day, [])  # キーが存在しない場合は空のリストを返す
+        day_total_sec = sum(video['viewing_time'] for video in videos if video['category_name'] in selected_categories)
         day_total_min = day_total_sec / 60  # 秒数を分に変換
         viewing_times_in_min.append(day_total_min)
 
@@ -150,7 +177,7 @@ def update_graph(selected_categories, history_data, graph_placeholder):
     bars = plt.bar(days, viewing_times_in_min, color='#1340F2', width=0.3)
     plt.xlabel('日付')
     plt.ylabel('視聴時間 (分)')
-    plt.title('選択されたカテゴリにおける過去3日間のYouTube視聴時間')
+    plt.title('過去1週間のYouTube視聴時間')
     plt.xticks(days)
 
     # 各棒に「時間:分:秒」形式のラベルを追加
@@ -164,7 +191,7 @@ def update_graph(selected_categories, history_data, graph_placeholder):
 def wait_for_element_clickable(browser, by, value, timeout=10):
     return WebDriverWait(browser, timeout).until(EC.element_to_be_clickable((by, value)))
 
-def wait_for_element_visible(browser, by, value, timeout=10):
+def wait_for_element_visible(browser, by, value, timeout=20):
     return WebDriverWait(browser, timeout).until(EC.visibility_of_element_located((by, value)))
 
 def find_element_by_text(elements, text):
@@ -198,10 +225,9 @@ def start_button_clicked(input_email_or_phone, input_password):
         next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
         next_button.click()
     
-    # ページの特定の要素が表示されるまで待つ
-    wait_for_element_visible(browser, By.XPATH, "//*[contains(text(), '火曜日')]")
+    # ヘッダーが操作可能になるまで待つ（スクレイピングを適切に行うため）
+    wait_for_element_clickable(browser, By.ID, "masthead-container")
     
-
     print('こんにちは')
     
     try:
@@ -231,8 +257,27 @@ if email_or_phone and password and st.sidebar.button("スタート"):
     st.session_state['graph_placeholder'] = graph_placeholder
 
 # カテゴリ選択用のチェックボックス
+# if 'unique_category_names' in st.session_state:
+#     selected_categories = st.sidebar.multiselect("カテゴリを選択", st.session_state['unique_category_names'], default=st.session_state['unique_category_names'])
+
 if 'unique_category_names' in st.session_state:
-    selected_categories = st.sidebar.multiselect("カテゴリを選択", st.session_state['unique_category_names'], default=st.session_state['unique_category_names'])
+    unique_category_names = st.session_state['unique_category_names']
+    
+    # デフォルトの選択を外すためのリストを作成
+    default_selection = unique_category_names
+    
+    # 特定のカテゴリがunique_category_namesに存在する場合、そのカテゴリのデフォルト選択を外す
+    if 'ニュースと政治' in default_selection:
+        default_selection.remove('ニュースと政治')
+    if '科学と技術' in default_selection:
+        default_selection.remove('科学と技術')
+    if '教育' in default_selection:
+        default_selection.remove('教育')
+    
+    selected_categories = st.sidebar.multiselect("カテゴリを選択", unique_category_names, default=default_selection)
+
+
+
 
 # グラフを更新するための条件付き呼び出し
 if 'history_data' in st.session_state and 'unique_category_names' in st.session_state:
