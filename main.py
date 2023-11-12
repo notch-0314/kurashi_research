@@ -108,8 +108,6 @@ def fetch_data_for_date(date_label, browser):
     xpath_query = f"//ytd-item-section-renderer[contains(@class, 'style-scope ytd-section-list-renderer')][.//div[@id='title' and contains(text(), '{date_label}')]]"
     elements = browser.find_elements(By.XPATH, xpath_query)
     
-    print(f"Found {len(elements)} elements for date label '{date_label}'")  # elementsの数を出力
-    
     if not elements: # 要素が見つからなかった場合、空のデータリストを返す
         return data
 
@@ -161,17 +159,32 @@ def get_history_data(browser):
 
     return history_data
 
+# 与えられた情報を元にグラフを描画
+def draw_graph(days, viewing_times_in_min):
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(days, viewing_times_in_min, color='#1340F2', width=0.3)
+    plt.xlabel('日付')
+    plt.ylabel('視聴時間 (分)')
+    plt.title('過去1週間のYouTube視聴時間')
+    plt.xticks(days)
+
+    for bar in bars:
+        yvalue = bar.get_height()
+        hours, minutes, seconds = convert_seconds_to_hrs_min_sec(int(yvalue * 60))  # yvalueを再び秒に変換
+        plt.text(bar.get_x() + bar.get_width()/2, yvalue, f"{hours}時間{minutes}分{seconds}秒", ha='center', va='bottom')
+
+    st.pyplot(plt)
+
 # チェックされたカテゴリの動画の視聴時間を合計し、グラフ化
-def update_graph(selected_categories, history_data, graph_placeholder):
+def update_graph(selected_categories, history_data): 
     viewing_times_in_min = []  # 分単位での視聴時間を格納するリスト
     days = st.session_state['date_labels']  # セッション状態から日付ラベルを取得
-
+    
     for day in days:
         videos = history_data.get(day, [])  # キーが存在しない場合は空のリストを返す
         day_total_sec = sum(video['viewing_time'] for video in videos if video['category_name'] in selected_categories)
         day_total_min = day_total_sec / 60  # 秒数を分に変換
         viewing_times_in_min.append(day_total_min)
-        # その他の出力ロジック...
 
     # グラフのデータをセッション状態に保存
     st.session_state['graph_data'] = {
@@ -180,21 +193,7 @@ def update_graph(selected_categories, history_data, graph_placeholder):
     }
 
     # グラフを描画
-    plt.figure(figsize=(10, 6))
-    bars = plt.bar(days, viewing_times_in_min, color='#1340F2', width=0.3)
-    plt.xlabel('日付')
-    plt.ylabel('視聴時間 (分)')
-    plt.title('過去1週間のYouTube視聴時間')
-    plt.xticks(days)
-
-    # 各棒に「時間:分:秒」形式のラベルを追加
-    for bar in bars:
-        yvalue = bar.get_height()
-        hours, minutes, seconds = convert_seconds_to_hrs_min_sec(int(yvalue * 60))  # yvalueを再び秒に変換
-        plt.text(bar.get_x() + bar.get_width()/2, yvalue, f"{hours}時間{minutes}分{seconds}秒", ha='center', va='bottom')
-        
-    graph_placeholder.pyplot(plt)
-
+    draw_graph(days, viewing_times_in_min)
 
 # 視聴履歴データを表示する関数
 def show_history_data(history_data, selected_date, selected_categories):
@@ -236,7 +235,6 @@ def find_element_by_text(elements, text):
     return next((element for element in elements if element.text == text), None)
 
 def start_button_clicked(input_email_or_phone, input_password):
-    graph_placeholder = st.empty()
     
     ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
 
@@ -277,21 +275,16 @@ def start_button_clicked(input_email_or_phone, input_password):
     except Exception as e:
         print(f"エラーが発生しました: {e}")
         
-    return history_data, list(unique_category_names), graph_placeholder
-
-if 'graph_placeholder' not in st.session_state:
-    st.session_state['graph_placeholder'] = st.empty()
-    print("session_state['graph_placeholder']が作られたよ")
+    return history_data, list(unique_category_names)  
 
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
 password = st.sidebar.text_input("パスワード", type="password")  # type="password"でテキストを隠す
 
 if email_or_phone and password and st.sidebar.button("スタート"):
-    history_data, unique_category_names, graph_placeholder = start_button_clicked(email_or_phone, password)
+    history_data, unique_category_names = start_button_clicked(email_or_phone, password) 
     st.session_state['history_data'] = history_data
     st.session_state['unique_category_names'] = unique_category_names
-    st.session_state['graph_placeholder'] = graph_placeholder
     st.session_state['prev_selected_categories'] = []
 
 if 'unique_category_names' in st.session_state:
@@ -313,7 +306,7 @@ if 'unique_category_names' in st.session_state:
 if 'history_data' in st.session_state and 'unique_category_names' in st.session_state:
     if selected_categories != st.session_state.get('prev_selected_categories', []):
         # グラフを更新する
-        update_graph(selected_categories, st.session_state['history_data'], st.session_state['graph_placeholder'])
+        update_graph(selected_categories, st.session_state['history_data']) 
         # 現在のselected_categoriesを保存
         st.session_state['prev_selected_categories'] = selected_categories
         print('グラフ更新')
@@ -321,27 +314,10 @@ if 'history_data' in st.session_state and 'unique_category_names' in st.session_
         # グラフデータがセッション状態に存在する場合、そのデータを使用してグラフを再描画
         days = st.session_state['graph_data']['days']
         viewing_times_in_min = st.session_state['graph_data']['viewing_times_in_min']
-        
-        # その他のグラフ再描画のロジック...
-        # グラフを描画
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(days, viewing_times_in_min, color='#1340F2', width=0.3)
-        plt.xlabel('日付')
-        plt.ylabel('視聴時間 (分)')
-        plt.title('過去1週間のYouTube視聴時間')
-        plt.xticks(days)
-
-        # 各棒に「時間:分:秒」形式のラベルを追加
-        for bar in bars:
-            yvalue = bar.get_height()
-            hours, minutes, seconds = convert_seconds_to_hrs_min_sec(int(yvalue * 60))  # yvalueを再び秒に変換
-            plt.text(bar.get_x() + bar.get_width()/2, yvalue, f"{hours}時間{minutes}分{seconds}秒", ha='center', va='bottom')
-        
-        st.pyplot(plt)
+        draw_graph(days, viewing_times_in_min)
         print('グラフ再描画')
 
 # display_history_buttonsの呼び出し条件
 if 'history_data' in st.session_state and 'unique_category_names' in st.session_state:
     display_history_buttons(st.session_state['history_data'], selected_categories)
-    print('ボタンと履歴表示')
 
