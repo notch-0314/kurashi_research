@@ -194,6 +194,38 @@ def update_graph(selected_categories, history_data, graph_placeholder):
         plt.text(bar.get_x() + bar.get_width()/2, yvalue, f"{hours}時間{minutes}分{seconds}秒", ha='center', va='bottom')
 
     graph_placeholder.pyplot(plt)
+    print('グラフ表示やってる')
+    
+# 視聴履歴データを表示する関数
+def show_history_data(history_data, selected_date, selected_categories):
+    data = history_data.get(selected_date, [])
+    if data:
+        st.write(f"{selected_date} の視聴履歴:")
+        for video in data:
+            if video['category_name'] in selected_categories:
+                hours, minutes, seconds = convert_seconds_to_hrs_min_sec(video['viewing_time'])
+                st.write(f"タイトル: {video['title']}, カテゴリ: {video['category_name']}, チャンネル: {video['channel_name']}, 視聴時間: {hours}時間{minutes}分{seconds}秒")
+    else:
+        st.write(f"{selected_date} の視聴履歴はありません。")
+
+# 日付ごとにボタンを表示して、選択された日付の視聴履歴を表示
+def display_history_buttons(history_data, selected_categories):
+    date_labels = st.session_state['date_labels']
+    
+    # 列の数を日付の数に設定
+    cols = st.columns(len(date_labels))
+
+    for i, date in enumerate(date_labels):
+        # 各列にボタンを配置
+        if cols[i].button(date):
+            st.session_state['selected_date'] = date
+
+    # 選択された日付の視聴履歴を表示
+    selected_date = st.session_state.get('selected_date', date_labels[0])  # デフォルトは最初の日付
+    show_history_data(history_data, selected_date, selected_categories)
+    print('ボタン表示と履歴表示やってる')
+
+    
 
 def wait_for_element_clickable(browser, by, value, timeout=10):
     return WebDriverWait(browser, timeout).until(EC.element_to_be_clickable((by, value)))
@@ -205,8 +237,6 @@ def find_element_by_text(elements, text):
     return next((element for element in elements if element.text == text), None)
 
 def start_button_clicked(input_email_or_phone, input_password):
-    
-    graph_placeholder = st.empty() # グラフを表示する場所に空のグラフを配置
     
     ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
 
@@ -235,8 +265,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     # ヘッダーが操作可能になるまで待つ（スクレイピングを適切に行うため）
     wait_for_element_clickable(browser, By.ID, "masthead-container")
     
-    print('こんにちは')
-    
     try:
         # 視聴履歴を取得
         history_data = get_history_data(browser)
@@ -252,6 +280,8 @@ def start_button_clicked(input_email_or_phone, input_password):
     return history_data, list(unique_category_names), graph_placeholder
 
 
+# グラフを表示する場所に空のグラフを配置
+graph_placeholder = st.empty() 
 
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
@@ -279,8 +309,9 @@ if 'unique_category_names' in st.session_state:
     selected_categories = st.sidebar.multiselect("カテゴリを選択", st.session_state['unique_category_names'], default=default_selection)
 
 
-# グラフを更新するための条件付き呼び出し
+# グラフを更新する呼び出し
 if 'history_data' in st.session_state and 'unique_category_names' in st.session_state:
     update_graph(selected_categories, st.session_state['history_data'], st.session_state['graph_placeholder'])
+    display_history_buttons(st.session_state['history_data'], selected_categories)
 
         
