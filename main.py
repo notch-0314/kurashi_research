@@ -112,7 +112,7 @@ def fetch_data_for_date(date_label, browser):
         return data
 
     element = elements[0]
-    links = element.find_elements(By.XPATH, ".//a[contains(@class, 'yt-simple-endpoint')]")
+    links = element.find_elements(By.XPATH, ".//a[@id='video-title']") # 'id="video-title"'を持つ<a>タグのみを対象とする
 
     for link in links:
         url = link.get_attribute('href')
@@ -164,13 +164,20 @@ def get_history_data(browser):
 def update_graph(selected_categories, history_data, graph_placeholder):
     viewing_times_in_min = []  # 分単位での視聴時間を格納するリスト
     days = st.session_state['date_labels']  # セッション状態から日付ラベルを取得
-    # days.reverse()
 
     for day in days:
         videos = history_data.get(day, [])  # キーが存在しない場合は空のリストを返す
         day_total_sec = sum(video['viewing_time'] for video in videos if video['category_name'] in selected_categories)
         day_total_min = day_total_sec / 60  # 秒数を分に変換
         viewing_times_in_min.append(day_total_min)
+        
+        # 追加
+        print(f"{day} の視聴履歴:")
+        for video in videos:
+            if video['category_name'] in selected_categories:
+                hours, minutes, seconds = convert_seconds_to_hrs_min_sec(video['viewing_time'])
+                print(f"  タイトル: {video['title']}, カテゴリ: {video['category_name']}, チャンネル: {video['channel_name']}, 視聴時間: {hours}時間{minutes}分{seconds}秒")
+
 
     # グラフを描画
     plt.figure(figsize=(10, 6))
