@@ -20,6 +20,7 @@ import pandas as pd
 # from webdriver_manager.core.os_manager import ChromeType
 import platform
 from bs4 import BeautifulSoup
+import time
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
 rcParams['font.family'] = 'Noto Sans JP'
@@ -445,6 +446,9 @@ def start_button_clicked(input_email_or_phone, input_password):
     browser.get('https://www.youtube.com/feed/history')
     st.write("ブラウザゲット直後")
     # 各要素クリック可能になってから実行
+    # JavaScriptがロードされるのを待つ
+    time.sleep(20)  # 20秒待機
+    
     # ページのHTMLを取得
     html_content = browser.page_source
     # BeautifulSoupでHTMLを解析
