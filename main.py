@@ -463,7 +463,8 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     # StreamlitでHTMLを表示
     #st.write(text)
-    
+    language = browser.execute_script("return document.documentElement.lang;") # ページの言語設定を取得
+    st.write(language)
     wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'Sign in')]").click()
     # wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
