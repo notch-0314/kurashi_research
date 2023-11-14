@@ -419,17 +419,16 @@ def wait_for_element_clickable(browser, by, value, timeout=300):
 
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
 def start_button_clicked(input_email_or_phone, input_password):
-    print('Webdriver前')
+    st.write("Webdriver前")
     options = webdriver.ChromeOptions()
-    print('Webdriver後')
+    st.write("Webdriver後")
     if platform.system() == "Linux":
         options.add_argument("--headless")
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-blink-features=AutomationControlled')
-        print('Linuxと判別')
-        
+        st.write("Linuxと判別")
         # webdriver_managerによりドライバーをインストール
         # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
         # CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
@@ -483,13 +482,11 @@ def start_button_clicked(input_email_or_phone, input_password):
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
 password = st.sidebar.text_input("パスワード", type="password")  # type="password"でテキストを隠す
-print('表示完了')
-st.sidebar.write("表示完了")
+st.write("表示完了")
 
 # start_button_clicked実行。その後セッションにhistory_data（視聴履歴）・unique_category_names（ユニークなカテゴリ一覧）を入れて保存。カテゴリの変更を検知するためst.session_state['prev_selected_categories']作成
 if email_or_phone and password and st.sidebar.button("スタート"):
-    print('ボタンクリック')
-    st.sidebar.write("ボタンクリック")
+    st.write("ボタンクリック")
     history_data, unique_category_names = start_button_clicked(email_or_phone, password) 
     st.session_state['history_data'] = history_data
     st.session_state['unique_category_names'] = unique_category_names
