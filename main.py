@@ -430,7 +430,6 @@ def start_button_clicked(input_email_or_phone, input_password):
         # options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument("--lang=ja-JP")  # 日本語に設定
         
         browser = webdriver.Chrome(options=options)
         # driver = webdriver.Chrome(service=ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
@@ -465,29 +464,33 @@ def start_button_clicked(input_email_or_phone, input_password):
     # StreamlitでHTMLを表示
     st.write(text)
     
-    wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
-
+    wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'Sign in')]").click()
+    # wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
-    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
-    
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
+    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
     st.write("2つ目完了")
-    wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
+    wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]").click()  # 次へボタンをクリック
+    # wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
     
     st.write("3つ目完了")
-    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
-    
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Enter your password"]').send_keys(input_password)    # パスワード入力
+    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
     st.write("4つ目完了")
 
     try: # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
-        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
+        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]")
+        # next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
         next_button.click()
     except StaleElementReferenceException: # エラーが発生した場合、要素を再取得して操作を試みる
-        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
+        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]")
+        # next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
         next_button.click()
+    st.write("これで開ける！")
     
     # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
     wait_for_element_clickable(browser, By.ID, "masthead-container")
-    
+    st.write("ヘッダー操作可能")
     try:
         # 視聴履歴を取得
         history_data = get_history_data(browser)
