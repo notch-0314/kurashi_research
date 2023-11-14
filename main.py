@@ -469,6 +469,7 @@ def start_button_clicked(input_email_or_phone, input_password):
     # wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
     time.sleep(10)
+    
     # ページのHTMLを取得
     html_content = browser.page_source
     # BeautifulSoupでHTMLを解析
@@ -483,6 +484,7 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     # StreamlitでHTMLを表示
     st.write(text)
+    
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
     # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
     st.write("2つ目完了")
