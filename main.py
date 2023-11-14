@@ -485,6 +485,20 @@ def start_button_clicked(input_email_or_phone, input_password):
     # StreamlitでHTMLを表示
     st.write(text)
     
+    # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
+
+    # ページ内のすべてのテキストを含む要素を取得
+    text_elements = soup.find_all(text=True)
+
+    # 各テキスト要素の周辺にあるDOMを取得
+    extracted_content = ''
+    for text_element in text_elements:
+        parent_element = text_element.parent  # テキストの親要素を取得
+        extracted_content += str(parent_element) + "\n"  # 親要素のHTMLタグと属性を含めて追加
+
+    # Streamlitで表示
+    st.write(extracted_content)
+    
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
     # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
     st.write("2つ目完了")
