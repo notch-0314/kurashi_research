@@ -1,8 +1,7 @@
 import streamlit as st
 from selenium import webdriver
-import chromedriver_binary
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome import service as fs
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
@@ -14,12 +13,11 @@ from isodate import parse_duration
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-import numpy as np
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
 from streamlit_pills import pills
 import pandas as pd
-
+from webdriver_manager.core.os_manager import ChromeType
+import platform
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
 rcParams['font.family'] = 'Noto Sans JP'
@@ -422,15 +420,29 @@ def wait_for_element_clickable(browser, by, value, timeout=10):
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
 def start_button_clicked(input_email_or_phone, input_password):
     
-    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
-
     options = webdriver.ChromeOptions()
-    options.add_argument('--user-agent=' + ua)
-    options.add_argument('--disable-blink-features=AutomationControlled')
     
-    chrome_service = ChromeService(executable_path=ChromeDriverManager().install())
-    
-    browser = webdriver.Chrome(service=chrome_service, options=options)
+    if platform.system() == "Linux":
+        options.add_argument("--headless")
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        
+        # webdriver_managerによりドライバーをインストール
+        # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+        # CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+        # service = fs.Service(CHROMEDRIVER)
+        browser = webdriver.Chrome(
+                                options=options,
+                                service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+                                )
+    else:
+        # ここにLinux以外（例えばmacOS）のコードを記述
+        ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--user-agent=' + ua)
+        chrome_service = Service(executable_path=ChromeDriverManager().install())
+        browser = webdriver.Chrome(service=chrome_service, options=options)
     
     browser.get('https://www.youtube.com/feed/history')
 
