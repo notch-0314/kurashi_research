@@ -414,7 +414,7 @@ def display_history_buttons(history_data, selected_categories):
     show_history_data(history_data, selected_date, selected_categories) # 選択された日付の視聴履歴を表示
 
 # 要素がクリック可能になるまでWebDriverを待機。スクレイピング失敗防止。start_button_clicked内で使用
-def wait_for_element_clickable(browser, by, value, timeout=10):
+def wait_for_element_clickable(browser, by, value, timeout=60):
     return WebDriverWait(browser, timeout).until(EC.element_to_be_clickable((by, value)))
 
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
