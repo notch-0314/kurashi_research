@@ -474,16 +474,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     html_content = browser.page_source
     # BeautifulSoupでHTMLを解析
     soup = BeautifulSoup(html_content, 'html.parser')
-
-    # スクリプトとスタイルを除去
-    for script_or_style in soup(["script", "style"]):
-        script_or_style.extract()  # スクリプトとスタイルタグを取り除く
-
-    # HTMLテキストのみを取得
-    text = soup.get_text()
-    
-    # StreamlitでHTMLを表示
-    st.write(text)
     
     # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
 
@@ -498,6 +488,17 @@ def start_button_clicked(input_email_or_phone, input_password):
 
     # Streamlitで表示
     st.write(extracted_content)
+    
+    # ページ内のすべてのinput要素を抽出
+    input_elements = soup.find_all('input')
+
+    # 抽出したinput要素のHTMLを取得
+    extracted_content2 = ''
+    for input_element in input_elements:
+        extracted_content2 += str(input_element) + "\n"
+
+    # Streamlitで表示
+    st.write(extracted_content2)
     
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
     # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
