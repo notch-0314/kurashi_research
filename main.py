@@ -19,6 +19,7 @@ from streamlit_pills import pills
 import pandas as pd
 # from webdriver_manager.core.os_manager import ChromeType
 import platform
+from bs4 import BeautifulSoup
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
 rcParams['font.family'] = 'Noto Sans JP'
@@ -446,8 +447,18 @@ def start_button_clicked(input_email_or_phone, input_password):
     # 各要素クリック可能になってから実行
     # ページのHTMLを取得
     html_content = browser.page_source
+    # BeautifulSoupでHTMLを解析
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # スクリプトとスタイルを除去
+    for script_or_style in soup(["script", "style"]):
+        script_or_style.extract()  # スクリプトとスタイルタグを取り除く
+
+    # HTMLテキストのみを取得
+    text = soup.get_text()
+    
     # StreamlitでHTMLを表示
-    st.write(html_content)
+    st.write(text)
     
     wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
