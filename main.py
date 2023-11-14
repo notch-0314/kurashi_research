@@ -433,10 +433,10 @@ def start_button_clicked(input_email_or_phone, input_password):
         # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
         # CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
         # service = fs.Service(CHROMEDRIVER)
-        browser = webdriver.Chrome(
-                                options=options,
-                                service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
-                                )
+        
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()), options=options)
+        # driver = webdriver.Chrome(service=ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
+        
     else:
         # ここにLinux以外（例えばmacOS）のコードを記述
         ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
