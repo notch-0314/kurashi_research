@@ -1,5 +1,6 @@
 import streamlit as st
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome import service as fs
@@ -419,12 +420,13 @@ def wait_for_element_clickable(browser, by, value, timeout=300):
 
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
 def start_button_clicked(input_email_or_phone, input_password):
-    options = webdriver.ChromeOptions()
+    options = Options()
+    # options = webdriver.ChromeOptions()
     if platform.system() == "Linux":
-        options.add_argument("--headless")
+        options.add_argument("--headless=new")
         options.add_argument('--disable-gpu')
         # options.add_argument('--no-sandbox')
-        # options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-blink-features=AutomationControlled')
         
         browser = webdriver.Chrome(options=options)
