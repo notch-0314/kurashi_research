@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome import service as fs
-from webdriver_manager.chrome import ChromeDriverManager
+# from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from urllib.parse import urlparse, parse_qs
@@ -16,7 +16,7 @@ from matplotlib import rcParams
 from matplotlib.lines import Line2D
 from streamlit_pills import pills
 import pandas as pd
-from webdriver_manager.core.os_manager import ChromeType
+# from webdriver_manager.core.os_manager import ChromeType
 import platform
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
@@ -427,7 +427,7 @@ def start_button_clicked(input_email_or_phone, input_password):
         # options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-blink-features=AutomationControlled')
         
-        browser = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()), options=options)
+        browser = webdriver.Chrome(options=options)
         # driver = webdriver.Chrome(service=ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
         
     else:
