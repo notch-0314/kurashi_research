@@ -469,8 +469,14 @@ def start_button_clicked(input_email_or_phone, input_password):
 
     st.write("1つ目完了")
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
+    
+    st.write("2つ目完了")
     wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
+    
+    st.write("3つ目完了")
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
+    
+    st.write("4つ目完了")
 
     try: # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
         next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
