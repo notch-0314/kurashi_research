@@ -440,10 +440,15 @@ def start_button_clicked(input_email_or_phone, input_password):
         chrome_service = Service(executable_path=ChromeDriverManager().install())
         browser = webdriver.Chrome(service=chrome_service, options=options)
     
-    st.write("ブラウザゲット直前")
+    
     browser.get('https://www.youtube.com/feed/history')
     st.write("ブラウザゲット直後")
     # 各要素クリック可能になってから実行
+    # ページのHTMLを取得
+    html_content = browser.page_source
+    # StreamlitでHTMLを表示
+    st.write(html_content)
+    
     wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
