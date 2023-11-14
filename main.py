@@ -421,8 +421,8 @@ def wait_for_element_clickable(browser, by, value, timeout=300):
 def start_button_clicked(input_email_or_phone, input_password):
     options = webdriver.ChromeOptions()
     if platform.system() == "Linux":
-        # options.add_argument("--headless")
-        # options.add_argument('--disable-gpu')
+        options.add_argument("--headless")
+        options.add_argument('--disable-gpu')
         # options.add_argument('--no-sandbox')
         # options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-blink-features=AutomationControlled')
