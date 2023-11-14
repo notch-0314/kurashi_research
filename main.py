@@ -7,6 +7,7 @@ from selenium.webdriver.chrome import service as fs
 # from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from urllib.parse import urlparse, parse_qs
 from selenium.common.exceptions import StaleElementReferenceException
 from googleapiclient.discovery import build
@@ -417,8 +418,22 @@ def display_history_buttons(history_data, selected_categories):
     show_history_data(history_data, selected_date, selected_categories) # 選択された日付の視聴履歴を表示
 
 # 要素がクリック可能になるまでWebDriverを待機。スクレイピング失敗防止。start_button_clicked内で使用
-def wait_for_element_clickable(browser, by, value, timeout=300):
+def wait_for_element_clickable(browser, by, value, timeout=30):
     return WebDriverWait(browser, timeout).until(EC.element_to_be_clickable((by, value)))
+
+# 指定されたテキストを持つinput要素を見つける関数
+def find_input_by_text(browser, text, timeout=30):
+    try:
+        # aria-label属性を使用して要素を検索
+        return WebDriverWait(browser, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, f'input[aria-label="{text}"]'))
+        )
+    except TimeoutException:
+        st.write(f"Timeout: '{text}'を持つinput要素が見つかりませんでした。")
+        return None
+    except NoSuchElementException:
+        st.write(f"要素が見つかりません: '{text}'")
+        return None
 
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
 def start_button_clicked(input_email_or_phone, input_password):
@@ -476,18 +491,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     soup = BeautifulSoup(html_content, 'html.parser')
     
     # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
-
-    # ページ内のすべてのテキストを含む要素を取得
-    text_elements = soup.find_all(text=True)
-
-    # 各テキスト要素の周辺にあるDOMを取得
-    extracted_content = ''
-    for text_element in text_elements:
-        parent_element = text_element.parent  # テキストの親要素を取得
-        extracted_content += str(parent_element) + "\n"  # 親要素のHTMLタグと属性を含めて追加
-
-    # Streamlitで表示
-    st.write(extracted_content)
     
     # ページ内のすべてのinput要素を抽出
     input_elements = soup.find_all('input')
@@ -500,6 +503,13 @@ def start_button_clicked(input_email_or_phone, input_password):
     # Streamlitで表示
     st.write(extracted_content2)
     
+    email_or_phone_input = find_input_by_text(browser, "Email or phone")
+    if email_or_phone_input:
+        email_or_phone_input.send_keys(input_email_or_phone)
+        st.write("Email or phone入力完了")
+    else:
+        st.write("Email or phone入力欄が見つかりませんでした。")
+    st.write("1.5個目完了")
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
     # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
     st.write("2つ目完了")
