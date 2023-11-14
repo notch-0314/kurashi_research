@@ -445,12 +445,12 @@ def start_button_clicked(input_email_or_phone, input_password):
         chrome_service = Service(executable_path=ChromeDriverManager().install())
         browser = webdriver.Chrome(service=chrome_service, options=options)
     
-    print('ブラウザゲット直前')
+    st.write("ブラウザゲット直前")
     browser.get('https://www.youtube.com/feed/history')
-    print('ブラウザゲット直後')
+    st.write("ブラウザゲット直後")
     # 各要素クリック可能になってから実行
     wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
-    print('1つ目完了')
+    st.write("1つ目完了")
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
     wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
