@@ -432,7 +432,7 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     options = Options()
     if platform.system() == "Linux":
-        options.add_argument("--headless-new")
+        options.add_argument("--headless=new")
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
