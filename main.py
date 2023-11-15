@@ -469,6 +469,22 @@ def start_button_clicked(input_email_or_phone, input_password):
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
     wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
 
+    
+
+    
+    st.title('ヘッダー表示')
+    loading_text.write('💎スクレイピング中です')
+
+    # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
+    try:
+        wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
+    except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
+        wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
+    
+    
+    # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
+    st.write('ヘッダー表示')
+    
     # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
     time.sleep(5)
     # ページのHTMLを取得
@@ -486,23 +502,9 @@ def start_button_clicked(input_email_or_phone, input_password):
 
     # StreamlitでHTMLを表示
     st.write(text)
-
+    
+    
     st.title('ヘッダー表示')
-    st.title('ヘッダー表示')
-    loading_text.write('💎スクレイピング中です')
-
-    # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
-    try:
-        wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
-    except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
-        wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
-    
-    
-    # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
-    st.write('ヘッダー表示')
-    
-    
-    
     
     try:
         wait_for_element_clickable(browser, By.ID, "masthead-container")
