@@ -451,30 +451,18 @@ def start_button_clicked(input_email_or_phone, input_password):
         
     else:
         # ここにLinux以外（例えばmacOS）のコードを記述
-        ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
+        options.binary_location = '/Applications/Chromium.app/Contents/MacOS/Chromium'
+        # ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
         options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument('--user-agent=' + ua)
-        chrome_service = Service(executable_path=ChromeDriverManager().install())
-        browser = webdriver.Chrome(service=chrome_service, options=options)
+        # options.add_argument('--user-agent=' + ua)
+        # chrome_service = Service(executable_path=ChromeDriverManager().install())
+        browser = webdriver.Chrome(options=options)
     
     
     browser.get('https://www.youtube.com/feed/history')
     st.write("ブラウザゲット直後")
-    # 各要素クリック可能になってから実行
-    # JavaScriptがロードされるのを待つ
-    # time.sleep(10)  # 10秒待機
-    
-    # ページのHTMLを取得
-    #html_content = browser.page_source
-    # BeautifulSoupでHTMLを解析
-    #soup = BeautifulSoup(html_content, 'html.parser')
-
-    # スクリプトとスタイルを除去
-    #for script_or_style in soup(["script", "style"]):
-    #    script_or_style.extract()  # スクリプトとスタイルタグを取り除く
-
-    # HTMLテキストのみを取得
-    #text = soup.get_text()
+    user_agent = browser.execute_script("return navigator.userAgent;")
+    st.write("Current User-Agent:", user_agent)
     
     # StreamlitでHTMLを表示
     #st.write(text)
@@ -483,7 +471,7 @@ def start_button_clicked(input_email_or_phone, input_password):
     wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'Sign in')]").click()
     # wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
-    time.sleep(10)
+    time.sleep(5)
     
     # ページのHTMLを取得
     html_content = browser.page_source
