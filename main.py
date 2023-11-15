@@ -492,6 +492,11 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     st.write('メールアドレス入力した')
     
+    
+    
+    
+    wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
+    
     # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
     time.sleep(5)
     # ページのHTMLを取得
@@ -522,7 +527,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     st.write(extracted_content)
     
     
-    wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
     
     
     wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
