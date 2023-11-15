@@ -178,10 +178,10 @@ def draw_graph(days, category_wise_data):
         bottom = [x + y for x, y in zip(bottom, times)]
         total_per_day = [x + y for x, y in zip(total_per_day, times)]
 
-    plt.title('1週間の視聴時間', fontsize=18, color='#5C5C5C', fontweight='bold', loc='left', pad=24)
+    plt.title('1週間の視聴時間', fontsize=18, color='#333333', fontweight='bold', loc='left', pad=24)
 
-    plt.xticks(days, fontsize=14, color='#999999')
-    plt.yticks(fontsize=14, color='#999999')
+    plt.xticks(days, fontsize=14, color='#5C5C5C')
+    plt.yticks(fontsize=14, color='#5C5C5C')
     
     plt.gca().tick_params(axis='x', direction='out', pad=12)
     plt.gca().tick_params(axis='y', direction='out', pad=12)
@@ -214,7 +214,7 @@ def draw_graph(days, category_wise_data):
             time_str += f"{seconds}秒"
 
         if time_str:
-            plt.text(day, yvalue + 4, time_str, ha='center', va='bottom', fontsize=14, color='#5C5C5C')
+            plt.text(day, yvalue + 4, time_str, ha='center', va='bottom', fontsize=14, color='#333333')
 
     # カスタム凡例を作成
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=category,
@@ -223,7 +223,7 @@ def draw_graph(days, category_wise_data):
     # 凡例を追加・位置調整
     legend = plt.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(category_wise_data), frameon=False)
     for text in legend.get_texts():
-        text.set_color('#5C5C5C')
+        text.set_color('#333333')
         text.set_fontsize(12)
 
     plt.subplots_adjust(bottom=0.15) 
