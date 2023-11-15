@@ -550,7 +550,4 @@ if 'history_data' in st.session_state and 'unique_category_names' in st.session_
 # スクレイピングが完了した後は更新のたびに視聴データ・ボタンを更新
 if 'history_data' in st.session_state and 'unique_category_names' in st.session_state:
     display_history_buttons(st.session_state['history_data'], selected_categories)
-    
-
-print('変更しました')
 
