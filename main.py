@@ -473,7 +473,23 @@ def start_button_clicked(input_email_or_phone, input_password):
     wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'Sign in')]").click()
     # wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
     st.write("1つ目完了")
-    time.sleep(5)
+    
+    
+    
+    email_or_phone_input = find_input_by_text(browser, "Email or phone")
+    if email_or_phone_input:
+        email_or_phone_input.send_keys(input_email_or_phone)
+        st.write("Email or phone入力完了")
+    else:
+        st.write("Email or phone入力欄が見つかりませんでした。")
+    st.write("1.5個目完了")
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
+    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
+    st.write("2つ目完了")
+    wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]").click()  # 次へボタンをクリック
+    # wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
+    
+    st.write("3つ目完了")
     
     # ページのHTMLを取得
     html_content = browser.page_source
@@ -493,20 +509,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     # Streamlitで表示
     st.write(extracted_content2)
     
-    email_or_phone_input = find_input_by_text(browser, "Email or phone")
-    if email_or_phone_input:
-        email_or_phone_input.send_keys(input_email_or_phone)
-        st.write("Email or phone入力完了")
-    else:
-        st.write("Email or phone入力欄が見つかりませんでした。")
-    st.write("1.5個目完了")
-    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
-    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
-    st.write("2つ目完了")
-    wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]").click()  # 次へボタンをクリック
-    # wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
-    
-    st.write("3つ目完了")
     wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Enter your password"]').send_keys(input_password)    # パスワード入力
     # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
     st.write("4つ目完了")
