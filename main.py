@@ -443,6 +443,9 @@ def start_button_clicked(input_email_or_phone, input_password):
         # options.add_argument(f"user-agent={user_agent}") 
         
         browser = webdriver.Chrome(options=options)
+        # ユーザーエージェントを取得
+        user_agent = browser.execute_script("return navigator.userAgent;")
+        st.write("Current User-Agent is:", user_agent)
         
     else:
         # ここにLinux以外（例えばmacOS）のコードを記述
@@ -489,13 +492,14 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     wait_for_element_clickable(browser, By.CSS_SELECTOR, email_input_css).send_keys(input_email_or_phone) # メールアドレス入力
     
-    
     st.write('メールアドレス入力した')
     
     
     
     
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
+    
+    st.write('次へクリック')
     
     # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
     time.sleep(5)
