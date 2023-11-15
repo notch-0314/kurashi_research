@@ -483,7 +483,7 @@ def start_button_clicked(input_email_or_phone, input_password):
     else:
         st.write("Email or phone入力欄が見つかりませんでした。")
     st.write("1.5個目完了")
-    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
+    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
     # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
     st.write("2つ目完了")
     wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]").click()  # 次へボタンをクリック
