@@ -439,21 +439,20 @@ def start_button_clicked(input_email_or_phone, input_password):
         options.add_argument('--disable-blink-features=AutomationControlled')
         
         # uaを定義していたが、だめなことがわかったので廃止
-        user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
-        options.add_argument(f"user-agent={user_agent}")   
-        st.write(options.add_argument)
+        # user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        # options.add_argument(f"user-agent={user_agent}") 
         
         browser = webdriver.Chrome(options=options)
         
     else:
         # ここにLinux以外（例えばmacOS）のコードを記述
-        options.add_argument("--headless=new")
-        options.add_argument('--disable-gpu')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.binary_location = '/Applications/Chromium.app/Contents/MacOS/Chromium'
         options.add_argument('--disable-blink-features=AutomationControlled')
+        
+        
         browser = webdriver.Chrome(options=options)
+        # ユーザーエージェントを取得
+        user_agent = browser.execute_script("return navigator.userAgent;")
+        st.write("Current User-Agent is:", user_agent)
     
     browser.get('https://www.youtube.com/feed/history')
     
@@ -461,29 +460,45 @@ def start_button_clicked(input_email_or_phone, input_password):
     language = browser.execute_script("return document.documentElement.lang;") # ページの言語設定を取得
     st.write(language)
     
-    if language == 'ja-JP':
-        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
-        email_input_css = 'input[aria-label="メールアドレスまたは電話番号"]'
-        next_button_xpath = "//button[contains(., '次へ')]"
-        password_input_css = 'input[aria-label="パスワードを入力"]'
-    else: 
-        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
-        email_input_css = 'input[aria-label="Email or phone"]'
-        next_button_xpath = "//button[contains(., 'Next')]"
-        password_input_css = 'input[aria-label="Enter your password"]'
-
+    if platform.system() == "Linux":
+        email_input_css = '#identifierId'
+        password_input_css = '#password'
+        if language == 'ja-JP':
+            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
+            next_button_xpath = "//button[contains(., '次へ')]"
+        else:
+            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
+            next_button_xpath = "//button[contains(., 'Next')]"
+    else:
+        if language == 'ja-JP':
+            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
+            next_button_xpath = "//button[contains(., '次へ')]"
+            email_input_css = 'input[aria-label="メールアドレスまたは電話番号"]'
+            password_input_css = 'input[aria-label="パスワードを入力"]'
+        else:
+            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
+            next_button_xpath = "//button[contains(., 'Next')]"
+            email_input_css = 'input[aria-label="Email or phone"]'
+            password_input_css = 'input[aria-label="Enter your password"]'
+    
     # 共通の処理を実行
     wait_for_element_clickable(browser, By.XPATH, sign_in_button_xpath).click()
-    st.write('アドレス入力')
+    st.write('ログインボタン押した')
+    
+    
     
     wait_for_element_clickable(browser, By.CSS_SELECTOR, email_input_css).send_keys(input_email_or_phone) # メールアドレス入力
-    st.write('次へクリック')
+    
+    
+    st.write('メールアドレス入力した')
     
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
+    
+    
     wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
 
     
-    loading_text.write('💎スクレイピング中です')
+    
 
     # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
     try:
@@ -492,26 +507,11 @@ def start_button_clicked(input_email_or_phone, input_password):
         wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
     
     
-    # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
-    st.write('ヘッダー表示')
+    loading_text.write('💎スクレイピング中です')
     
-    # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
-    time.sleep(5)
-    # ページのHTMLを取得
-    html_content = browser.page_source
-
-    # BeautifulSoupでHTMLを解析
-    soup = BeautifulSoup(html_content, 'html.parser')
-
-    # スクリプトとスタイルを除去
-    for script_or_style in soup(["script", "style"]):
-        script_or_style.extract()  # スクリプトとスタイルタグを取り除く
-
-    # HTMLテキストのみを取得
-    text = soup.get_text()
-
-    # StreamlitでHTMLを表示
-    st.write(text)
+    # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
+    
+    
     
     try:
         wait_for_element_clickable(browser, By.ID, "masthead-container")
@@ -540,7 +540,6 @@ def start_button_clicked(input_email_or_phone, input_password):
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
 password = st.sidebar.text_input("パスワード", type="password")  # type="password"でテキストを隠す
-st.write('これは表示される？')
 
 # ローディングテキストの表示
 loading_text = st.empty()
