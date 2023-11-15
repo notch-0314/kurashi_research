@@ -449,8 +449,8 @@ def start_button_clicked(input_email_or_phone, input_password):
         options.add_argument('--disable-blink-features=AutomationControlled')
         browser = webdriver.Chrome(options=options)
         # ユーザーエージェントを取得
-        user_agent = browser.execute_script("return navigator.userAgent;")
-        st.write("Current User-Agent is:", user_agent)
+        # user_agent = browser.execute_script("return navigator.userAgent;")
+        # st.write("Current User-Agent is:", user_agent)
     
     browser.get('https://www.youtube.com/feed/history')
     
