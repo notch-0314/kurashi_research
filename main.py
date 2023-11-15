@@ -492,6 +492,25 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     st.write('メールアドレス入力した')
     
+    # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
+    time.sleep(5)
+    # ページのHTMLを取得
+    html_content = browser.page_source
+
+    # BeautifulSoupでHTMLを解析
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # スクリプトとスタイルを除去
+    for script_or_style in soup(["script", "style"]):
+        script_or_style.extract()  # スクリプトとスタイルタグを取り除く
+
+    # HTMLテキストのみを取得
+    text = soup.get_text()
+
+    # StreamlitでHTMLを表示
+    st.write(text)
+    
+    
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
     
     
