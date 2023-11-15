@@ -486,17 +486,20 @@ def start_button_clicked(input_email_or_phone, input_password):
     # Streamlitで表示
     st.write(extracted_content)
 
+    st.title('ヘッダー表示')
+    st.title('ヘッダー表示')
+    loading_text.write('💎スクレイピング中です')
+
     # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
     try:
         wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
     except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
         wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
     
-    loading_text.write('💎スクレイピング中です')
+    
     # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
     st.write('ヘッダー表示')
-    st.title('ヘッダー表示')
-    st.title('ヘッダー表示')
+    
     
     
     
