@@ -471,20 +471,21 @@ def start_button_clicked(input_email_or_phone, input_password):
 
     # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
     time.sleep(5)
+    # ページのHTMLを取得
     html_content = browser.page_source
+
+    # BeautifulSoupでHTMLを解析
     soup = BeautifulSoup(html_content, 'html.parser')
 
-    # CSSセレクタを使用して特定の要素を抽出
-    css_selector = ".example-class"  # ここに取得したい要素のCSSセレクタを指定
-    selected_elements = soup.select(css_selector)
+    # スクリプトとスタイルを除去
+    for script_or_style in soup(["script", "style"]):
+        script_or_style.extract()  # スクリプトとスタイルタグを取り除く
 
-    # 抽出した要素の内容（テキストやHTML）を取得
-    extracted_content = ''
-    for element in selected_elements:
-        extracted_content += str(element) + "\n"
+    # HTMLテキストのみを取得
+    text = soup.get_text()
 
-    # Streamlitで表示
-    st.write(extracted_content)
+    # StreamlitでHTMLを表示
+    st.write(text)
 
     st.title('ヘッダー表示')
     st.title('ヘッダー表示')
