@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 import japanize_matplotlib
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
-rcParams['font.family'] = 'Noto Sans JP'
+# rcParams['font.family'] = 'Noto Sans JP'
 
 # 今日を起点にして2日前〜6日前の曜日名をリスト形式で取得（スクレイピングする日付が「今日」「昨日」「n曜日」...となっているため）
 today = datetime.now()
