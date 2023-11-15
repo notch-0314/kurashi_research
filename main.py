@@ -519,13 +519,14 @@ def start_button_clicked(input_email_or_phone, input_password):
     # StreamlitでHTMLを表示
     st.write(text)
     
-    # ページ内のすべてのinput要素を抽出
-    input_elements = soup.find_all('input')
+    # ページ内のすべてのボタン要素を抽出
+    # ここでは、`button`要素と`input`要素のうちボタンタイプのものを対象とします
+    button_elements = soup.find_all(['button', 'input'], type=['submit', 'button', 'reset'])
 
-    # 抽出したinput要素のHTMLを取得
+    # 抽出したボタン要素のHTMLを取得
     extracted_content = ''
-    for input_element in input_elements:
-        extracted_content += str(input_element) + "\n"
+    for button_element in button_elements:
+        extracted_content += str(button_element) + "\n"
 
     # Streamlitで表示
     st.write(extracted_content)
