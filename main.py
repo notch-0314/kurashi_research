@@ -476,7 +476,12 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     loading_text.write('💎スクレイピング中です')
     # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
-    wait_for_element_clickable(browser, By.ID, "masthead-container")
+    st.write('ヘッダー表示')
+    try:
+        wait_for_element_clickable(browser, By.ID, "masthead-container")
+    except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
+        wait_for_element_clickable(browser, By.ID, "masthead-container")
+    st.write('ヘッダー表示完了')
     
     try:
         # 視聴履歴を取得
