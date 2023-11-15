@@ -443,15 +443,10 @@ def start_button_clicked(input_email_or_phone, input_password):
         options.add_argument(f"user-agent={user_agent}") 
         
         browser = webdriver.Chrome(options=options)
-        # ユーザーエージェントを取得
-        user_agent = browser.execute_script("return navigator.userAgent;")
-        st.write("Current User-Agent is:", user_agent)
         
     else:
         # ここにLinux以外（例えばmacOS）のコードを記述
         options.add_argument('--disable-blink-features=AutomationControlled')
-        
-        
         browser = webdriver.Chrome(options=options)
         # ユーザーエージェントを取得
         user_agent = browser.execute_script("return navigator.userAgent;")
@@ -461,8 +456,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     # 言語に基づいてXPathとCSSセレクタを切り替え
     language = browser.execute_script("return document.documentElement.lang;") # ページの言語設定を取得
-    st.write(language)
-    
     if language == 'ja-JP':
             sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
             next_button_xpath = "//button[contains(., '次へ')]"
@@ -474,82 +467,11 @@ def start_button_clicked(input_email_or_phone, input_password):
         email_input_css = 'input[aria-label="Email or phone"]'
         password_input_css = 'input[aria-label="Enter your password"]'
     
-    
-    # if platform.system() == "Linux":
-    #    email_input_css = '#identifierId'
-    #    password_input_css = '#password'
-    #    if language == 'ja-JP':
-    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
-    #        next_button_xpath = "//button[contains(., '次へ')]"
-    #    else:
-    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
-    #        next_button_xpath = "//button[contains(., 'Next')]"
-    #else:
-    #    if language == 'ja-JP':
-    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
-    #        next_button_xpath = "//button[contains(., '次へ')]"
-    #        email_input_css = 'input[aria-label="メールアドレスまたは電話番号"]'
-    #        password_input_css = 'input[aria-label="パスワードを入力"]'
-    #v    else:
-    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
-    #        next_button_xpath = "//button[contains(., 'Next')]"
-    #        email_input_css = 'input[aria-label="Email or phone"]'
-            #password_input_css = 'input[aria-label="Enter your password"]'
-    
     # 共通の処理を実行
     wait_for_element_clickable(browser, By.XPATH, sign_in_button_xpath).click()
-    st.write('ログインボタン押した')
-    
-    
-    
     wait_for_element_clickable(browser, By.CSS_SELECTOR, email_input_css).send_keys(input_email_or_phone) # メールアドレス入力
-    
-    st.write('メールアドレス入力した')
-    
-    
-    
-    
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
-    
-    st.write('次へクリック')
-    
-    # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
-    time.sleep(5)
-    # ページのHTMLを取得
-    html_content = browser.page_source
-
-    # BeautifulSoupでHTMLを解析
-    soup = BeautifulSoup(html_content, 'html.parser')
-
-    # スクリプトとスタイルを除去
-    for script_or_style in soup(["script", "style"]):
-        script_or_style.extract()  # スクリプトとスタイルタグを取り除く
-
-    # HTMLテキストのみを取得
-    text = soup.get_text()
-
-    # StreamlitでHTMLを表示
-    st.write(text)
-    
-    # ページ内のすべてのボタン要素を抽出
-    # ここでは、`button`要素と`input`要素のうちボタンタイプのものを対象とします
-    button_elements = soup.find_all(['button', 'input'], type=['submit', 'button', 'reset'])
-
-    # 抽出したボタン要素のHTMLを取得
-    extracted_content = ''
-    for button_element in button_elements:
-        extracted_content += str(button_element) + "\n"
-
-    # Streamlitで表示
-    st.write(extracted_content)
-    
-    
-    
-    
     wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
-
-    
-    
 
     # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
     try:
@@ -561,16 +483,11 @@ def start_button_clicked(input_email_or_phone, input_password):
     loading_text.write('💎スクレイピング中です')
     
     # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
-    
-    
-    
     try:
         wait_for_element_clickable(browser, By.ID, "masthead-container")
     except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
         wait_for_element_clickable(browser, By.ID, "masthead-container")
-    
-    st.write('ヘッダー表示完了')
-    
+        
     try:
         # 視聴履歴を取得
         history_data = get_history_data(browser)
