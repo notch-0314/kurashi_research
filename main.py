@@ -438,9 +438,9 @@ def start_button_clicked(input_email_or_phone, input_password):
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-blink-features=AutomationControlled')
         
-        # uaを定義していたが、だめなことがわかったので廃止
-        # user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
-        # options.add_argument(f"user-agent={user_agent}") 
+        # uaを定義していたが、だめなことがわかったので廃止→HTMLが大きく変わるのでやはりこちらでやる
+        user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        options.add_argument(f"user-agent={user_agent}") 
         
         browser = webdriver.Chrome(options=options)
         # ユーザーエージェントを取得
@@ -463,26 +463,38 @@ def start_button_clicked(input_email_or_phone, input_password):
     language = browser.execute_script("return document.documentElement.lang;") # ページの言語設定を取得
     st.write(language)
     
-    if platform.system() == "Linux":
-        email_input_css = '#identifierId'
-        password_input_css = '#password'
-        if language == 'ja-JP':
-            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
-            next_button_xpath = "//button[contains(., '次へ')]"
-        else:
-            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
-            next_button_xpath = "//button[contains(., 'Next')]"
-    else:
-        if language == 'ja-JP':
+    if language == 'ja-JP':
             sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
             next_button_xpath = "//button[contains(., '次へ')]"
             email_input_css = 'input[aria-label="メールアドレスまたは電話番号"]'
             password_input_css = 'input[aria-label="パスワードを入力"]'
-        else:
-            sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
-            next_button_xpath = "//button[contains(., 'Next')]"
-            email_input_css = 'input[aria-label="Email or phone"]'
-            password_input_css = 'input[aria-label="Enter your password"]'
+    else:
+        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
+        next_button_xpath = "//button[contains(., 'Next')]"
+        email_input_css = 'input[aria-label="Email or phone"]'
+        password_input_css = 'input[aria-label="Enter your password"]'
+    
+    
+    # if platform.system() == "Linux":
+    #    email_input_css = '#identifierId'
+    #    password_input_css = '#password'
+    #    if language == 'ja-JP':
+    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
+    #        next_button_xpath = "//button[contains(., '次へ')]"
+    #    else:
+    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
+    #        next_button_xpath = "//button[contains(., 'Next')]"
+    #else:
+    #    if language == 'ja-JP':
+    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
+    #        next_button_xpath = "//button[contains(., '次へ')]"
+    #        email_input_css = 'input[aria-label="メールアドレスまたは電話番号"]'
+    #        password_input_css = 'input[aria-label="パスワードを入力"]'
+    #v    else:
+    #        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
+    #        next_button_xpath = "//button[contains(., 'Next')]"
+    #        email_input_css = 'input[aria-label="Email or phone"]'
+            #password_input_css = 'input[aria-label="Enter your password"]'
     
     # 共通の処理を実行
     wait_for_element_clickable(browser, By.XPATH, sign_in_button_xpath).click()
