@@ -420,20 +420,6 @@ def display_history_buttons(history_data, selected_categories):
 def wait_for_element_clickable(browser, by, value, timeout=30):
     return WebDriverWait(browser, timeout).until(EC.element_to_be_clickable((by, value)))
 
-# 指定されたテキストを持つinput要素を見つける関数
-def find_input_by_text(browser, text, timeout=30):
-    try:
-        # aria-label属性を使用して要素を検索
-        return WebDriverWait(browser, timeout).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, f'input[aria-label="{text}"]'))
-        )
-    except TimeoutException:
-        st.write(f"Timeout: '{text}'を持つinput要素が見つかりませんでした。")
-        return None
-    except NoSuchElementException:
-        st.write(f"要素が見つかりません: '{text}'")
-        return None
-
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
 def start_button_clicked(input_email_or_phone, input_password):
     options = Options()
@@ -448,78 +434,42 @@ def start_button_clicked(input_email_or_phone, input_password):
         options.add_argument(f"user-agent={user_agent}")    
         
         browser = webdriver.Chrome(options=options)
-        # driver = webdriver.Chrome(service=ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
         
     else:
         # ここにLinux以外（例えばmacOS）のコードを記述
-        options.binary_location = '/Applications/Chromium.app/Contents/MacOS/Chromium'
-        # ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.105 Safari/537.36"
         options.add_argument('--disable-blink-features=AutomationControlled')
-        # options.add_argument('--user-agent=' + ua)
-        # chrome_service = Service(executable_path=ChromeDriverManager().install())
         browser = webdriver.Chrome(options=options)
     
-    
     browser.get('https://www.youtube.com/feed/history')
-    st.write("ブラウザゲット直後")
-    user_agent = browser.execute_script("return navigator.userAgent;")
-    st.write("Current User-Agent:", user_agent)
     
-    # StreamlitでHTMLを表示
-    #st.write(text)
+    # 言語に基づいてXPathとCSSセレクタを切り替え
     language = browser.execute_script("return document.documentElement.lang;") # ページの言語設定を取得
     st.write(language)
-    wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'Sign in')]").click()
-    # wait_for_element_clickable(browser, By.XPATH, "//ytd-button-renderer[contains(., 'ログイン')]").click()
-    st.write("1つ目完了")
     
-    
-    
-    email_or_phone_input = find_input_by_text(browser, "Email or phone")
-    if email_or_phone_input:
-        email_or_phone_input.send_keys(input_email_or_phone)
-        st.write("Email or phone入力完了")
-    else:
-        st.write("Email or phone入力欄が見つかりませんでした。")
-    st.write("1.5個目完了")
-    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Email or phone"]').send_keys(input_email_or_phone) # メールアドレス入力
-    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="メールアドレスまたは電話番号"]').send_keys(input_email_or_phone) # メールアドレス入力
-    st.write("2つ目完了")
-    wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]").click()  # 次へボタンをクリック
-    # wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]").click()  # 次へボタンをクリック
-    
-    st.write("3つ目完了")
-    
-    # ページのHTMLを取得
-    html_content = browser.page_source
-    # BeautifulSoupでHTMLを解析
-    soup = BeautifulSoup(html_content, 'html.parser')
-    
-    # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
-    
-    # ページ内のすべてのinput要素を抽出
-    input_elements = soup.find_all('input')
+    if language == 'ja-JP':
+        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
+        email_input_css = 'input[aria-label="メールアドレスまたは電話番号"]'
+        next_button_xpath = "//button[contains(., '次へ')]"
+        password_input_css = 'input[aria-label="パスワードを入力"]'
+    else: 
+        sign_in_button_xpath = "//ytd-button-renderer[contains(., 'Sign in')]"
+        email_input_css = 'input[aria-label="Email or phone"]'
+        next_button_xpath = "//button[contains(., 'Next')]"
+        password_input_css = 'input[aria-label="Enter your password"]'
 
-    # 抽出したinput要素のHTMLを取得
-    extracted_content2 = ''
-    for input_element in input_elements:
-        extracted_content2 += str(input_element) + "\n"
+    # 共通の処理を実行
+    wait_for_element_clickable(browser, By.XPATH, sign_in_button_xpath).click()
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, email_input_css).send_keys(input_email_or_phone) # メールアドレス入力
+    wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
+    wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
 
-    # Streamlitで表示
-    st.write(extracted_content2)
-    
-    wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="Enter your password"]').send_keys(input_password)    # パスワード入力
-    # wait_for_element_clickable(browser, By.CSS_SELECTOR, 'input[aria-label="パスワードを入力"]').send_keys(input_password)    # パスワード入力
     st.write("4つ目完了")
 
-    try: # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
-        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]")
-        # next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
-        next_button.click()
-    except StaleElementReferenceException: # エラーが発生した場合、要素を再取得して操作を試みる
-        next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., 'Next')]")
-        # next_button = wait_for_element_clickable(browser, By.XPATH, "//button[contains(., '次へ')]")
-        next_button.click()
+    # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
+    try:
+        wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
+    except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
+        wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
     st.write("これで開ける！")
     
     # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
