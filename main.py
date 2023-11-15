@@ -21,7 +21,7 @@ import pandas as pd
 # from webdriver_manager.core.os_manager import ChromeType
 import platform
 from bs4 import BeautifulSoup
-import time
+import japanize_matplotlib
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
 rcParams['font.family'] = 'Noto Sans JP'
