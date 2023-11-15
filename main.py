@@ -231,6 +231,7 @@ def draw_graph(days, category_wise_data):
 
 # selected_categories視聴時間をカテゴリごとに合計し、グラフ化。selected_categoriesに更新があったときのみ実行
 def update_graph(selected_categories, history_data):
+    
     days = st.session_state['date_labels']
     category_wise_data = {category: [0] * len(days) for category in selected_categories}
 
@@ -247,6 +248,8 @@ def update_graph(selected_categories, history_data):
     }
 
     draw_graph(days, category_wise_data)
+    
+    loading_text.empty()
 
 # 選択した日付の視聴時間、評価、最も見たカテゴリというサマリーを表示。
 def display_summary(history_data, selected_date, selected_categories):
@@ -422,8 +425,11 @@ def wait_for_element_clickable(browser, by, value, timeout=30):
 
 # スクレイピングの開始。「スタート」ボタンをクリックしたら実行
 def start_button_clicked(input_email_or_phone, input_password):
+    
+    # ローディングテキストの表示
+    loading_text.write('🔌 ログイン中です')
+    
     options = Options()
-    # options = webdriver.ChromeOptions()
     if platform.system() == "Linux":
         options.add_argument("--headless=new")
         options.add_argument('--disable-gpu')
@@ -444,7 +450,6 @@ def start_button_clicked(input_email_or_phone, input_password):
     
     # 言語に基づいてXPathとCSSセレクタを切り替え
     language = browser.execute_script("return document.documentElement.lang;") # ページの言語設定を取得
-    st.write(language)
     
     if language == 'ja-JP':
         sign_in_button_xpath = "//ytd-button-renderer[contains(., 'ログイン')]"
@@ -463,18 +468,16 @@ def start_button_clicked(input_email_or_phone, input_password):
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
     wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
 
-    st.write("4つ目完了")
-
     # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
     try:
         wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
     except StaleElementReferenceException:  # エラーが発生した場合、要素を再取得して操作を試みる
         wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
-    st.write("これで開ける！")
     
+    loading_text.write('💎スクレイピング中です')
     # ヘッダーが操作可能になるまで待つ（スクレイピング失敗防止）
     wait_for_element_clickable(browser, By.ID, "masthead-container")
-    st.write("ヘッダー操作可能")
+    
     try:
         # 視聴履歴を取得
         history_data = get_history_data(browser)
@@ -486,12 +489,18 @@ def start_button_clicked(input_email_or_phone, input_password):
         
     except Exception as e:
         print(f"エラーが発生しました: {e}")
+    
+    loading_text.write('📊グラフ作成中です')
         
-    return history_data, list(unique_category_names)  
+    return history_data, list(unique_category_names)
+    
 
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
 password = st.sidebar.text_input("パスワード", type="password")  # type="password"でテキストを隠す
+
+# ローディングテキストの表示
+loading_text = st.empty()
 
 # start_button_clicked実行。その後セッションにhistory_data（視聴履歴）・unique_category_names（ユニークなカテゴリ一覧）を入れて保存。カテゴリの変更を検知するためst.session_state['prev_selected_categories']作成
 if email_or_phone and password and st.sidebar.button("スタート"):
