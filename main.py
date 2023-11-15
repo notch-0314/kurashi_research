@@ -22,6 +22,7 @@ import pandas as pd
 import platform
 from bs4 import BeautifulSoup
 import japanize_matplotlib
+import time
 
 api_key = 'AIzaSyCyyG4wCBnsXtM6BvrNoHGLhvXdvJCg6E0'
 
@@ -468,6 +469,23 @@ def start_button_clicked(input_email_or_phone, input_password):
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
     wait_for_element_clickable(browser, By.CSS_SELECTOR, password_input_css).send_keys(input_password) 
 
+    # 既存のコードでページのHTMLを取得し、BeautifulSoupで解析
+    time.sleep(5)
+    html_content = browser.page_source
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # CSSセレクタを使用して特定の要素を抽出
+    css_selector = ".example-class"  # ここに取得したい要素のCSSセレクタを指定
+    selected_elements = soup.select(css_selector)
+
+    # 抽出した要素の内容（テキストやHTML）を取得
+    extracted_content = ''
+    for element in selected_elements:
+        extracted_content += str(element) + "\n"
+
+    # Streamlitで表示
+    st.write(extracted_content)
+
     # 次へボタンをクリック（失敗しやすいのでエラーハンドリング）
     try:
         wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()
@@ -479,6 +497,8 @@ def start_button_clicked(input_email_or_phone, input_password):
     st.write('ヘッダー表示')
     st.title('ヘッダー表示')
     st.title('ヘッダー表示')
+    
+    
     
     try:
         wait_for_element_clickable(browser, By.ID, "masthead-container")
