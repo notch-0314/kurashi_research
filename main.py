@@ -503,6 +503,7 @@ def start_button_clicked(input_email_or_phone, input_password):
 # サイドバーに入力フィールドを作成
 email_or_phone = st.sidebar.text_input("メールアドレスまたは電話番号")
 password = st.sidebar.text_input("パスワード", type="password")  # type="password"でテキストを隠す
+st.write('これは表示される？')
 
 # ローディングテキストの表示
 loading_text = st.empty()
