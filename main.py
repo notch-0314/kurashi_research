@@ -510,6 +510,17 @@ def start_button_clicked(input_email_or_phone, input_password):
     # StreamlitでHTMLを表示
     st.write(text)
     
+    # ページ内のすべてのinput要素を抽出
+    input_elements = soup.find_all('input')
+
+    # 抽出したinput要素のHTMLを取得
+    extracted_content = ''
+    for input_element in input_elements:
+        extracted_content += str(input_element) + "\n"
+
+    # Streamlitで表示
+    st.write(extracted_content)
+    
     
     wait_for_element_clickable(browser, By.XPATH, next_button_xpath).click()  # 次へボタンをクリック
     
